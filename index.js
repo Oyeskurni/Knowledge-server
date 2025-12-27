@@ -42,11 +42,27 @@ async function run() {
         res.send(result);
     })
 
+    app.get('/articles', async (req, res) => {
+      const email = req.query.email;
+      const query = { user_email: email };
+      const result = await articlesCollection.find(query).toArray();
+      res.send(result);
+    })
+
       app.post('/articles', async (req, res) => {
-          const article = req.body;
+        const article = req.body;
+        console.log(article);
+        
           const result = await articlesCollection.insertOne(article);
           res.send(result);
       })
+    
+    app.delete('/articles/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await articlesCollection.deleteOne(query);
+      res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
