@@ -56,7 +56,7 @@ Thumbs.db
 # -----------------------------
 # Firebase / Service Accounts
 # -----------------------------
-serviceAccountKey.json
+firebase-admin-key.json
 
 # -----------------------------
 # Misc
