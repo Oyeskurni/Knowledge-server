@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 
 // Middlewares
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://knowsphere-ef061.web.app'],
+  origin: ['https://knowsphere-ef061.web.app'],
   credentials: true
 }));
 
