@@ -5,7 +5,6 @@ const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
-const jwt = require("jsonwebtoken");
 
 // Middlewares
 app.use(cors({
