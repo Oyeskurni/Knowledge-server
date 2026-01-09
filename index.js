@@ -70,10 +70,23 @@ async function run() {
     const commentsCollection = client.db('articles').collection('article_comments');
 
     app.get('/articles', async (req, res) => {
-      const cursor = articlesCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    })
+  const { category, tag } = req.query; // query params থেকে নাও
+
+  let query = {};
+
+  if (category) {
+    query.category = category; // category filter
+  }
+
+  if (tag) {
+    query.tags = tag; // assume tags array in article document
+  }
+
+  const cursor = articlesCollection.find(query);
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
 
     app.get('/articles/:id', async (req, res) => {
       const id = req.params.id;
