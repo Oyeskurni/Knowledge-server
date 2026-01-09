@@ -65,63 +65,16 @@ const verifyEmail = (req, res, next) => {
 }
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
+    // Connect the client to the server	
     await client.connect();
     const articlesCollection = client.db('articles').collection('article');
     const commentsCollection = client.db('articles').collection('article_comments');
-    const bookmarksCollection = client.db('articles').collection('bookmarks');
 
-    app.post("/jwt", async (req, res) => {
-      const { email } = req.body;
-
-      // ✅ payload MUST be an object
-      const token = jwt.sign(
-        { email },                     // 👈 FIXED
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
-
-      // 🔐 cookie হিসেবে পাঠানো (best practice)
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: false, // production হলে true
-        sameSite: "lax"
-      });
-
-      res.send({ success: true });
-    });
-
-
-
-    // ===============================
-// GET ALL ARTICLES WITH FILTER
-// ===============================
-app.get('/articles', async (req, res) => {
-
-  // 🔽 FILTER PARAMETERS
-  const { category, tag } = req.query;
-
-  let query = {};
-
-  //  CATEGORY FILTER
-  if (category) {
-    query.category = category;
-  }
-
-  //  TAG FILTER (array field)
-  if (tag) {
-    query.tags = { $in: [tag] };
-  }
-
-  //  SORT: Latest first
-  const result = await articlesCollection
-    .find(query)
-    .sort({ createdAt: -1 })
-    .toArray();
-
-  res.send(result);
-});
-
+    app.get('/articles', async (req, res) => {
+      const cursor = articlesCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
 
     app.get('/articles/:id', async (req, res) => {
       const id = req.params.id;
@@ -130,7 +83,7 @@ app.get('/articles', async (req, res) => {
       res.send(result);
     })
 
-    app.get('/my-articles', verifyFirebaseToken,verifyEmail, async (req, res) => {
+    app.get('/my-articles', verifyFirebaseToken, verifyEmail, async (req, res) => {
       const email = req.query.email;
       const query = { user_email: email };
       const result = await articlesCollection.find(query).toArray();
@@ -195,18 +148,6 @@ app.get('/articles', async (req, res) => {
     });
 
 
-    // app.post('/comments', async (req, res) => {
-    //   const commentData = {
-    //     content: req.body.content,
-    //     user_name: req.body.user_name,
-    //     user_email: req.body.user_email,
-    //     user_photo: req.body.user_photo,
-    //     articleId: new ObjectId(req.body.articleId),
-    //     createdAt: new Date()
-    //   };
-    //   const result = await commentsCollection.insertOne(commentData);
-    //   res.send(result);
-    // });
 
     app.post('/comments', async (req, res) => {
       const { articleId } = req.body;
@@ -339,9 +280,6 @@ app.get('/articles', async (req, res) => {
         res.status(500).send({ message: "Server error", error });
       }
     });
-
-
-
 
 
     // Send a ping to confirm a successful connection
