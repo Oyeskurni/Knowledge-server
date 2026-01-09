@@ -8,17 +8,29 @@ const port = process.env.PORT || 5000;
 
 // Middlewares
 app.use(cors({
-  origin: ['https://knowsphere-ef061.web.app'],
-  credentials: true
+  origin: ['http://localhost:5173', 'https://knowsphere-ef061.web.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
+app.options('*', cors());
 
 app.use(express.json());
 app.use(cookieParser());
 
+if (!process.env.FB_API_KEY) {
+  console.error(' FB_API_KEY is missing in environment variables');
+  process.exit(1);
+}
+
 // firebase-admin
 var admin = require("firebase-admin");
-const decoded = Buffer.from(process.env.FB_API_KEY, ('base64')).toString('utf8');
-var serviceAccount = JSON.parse(decoded);
+try {
+  const decoded = Buffer.from(process.env.FB_API_KEY, 'base64').toString('utf8');
+  serviceAccount = JSON.parse(decoded);
+} catch (err) {
+  console.error(' Invalid FB_API_KEY format');
+  process.exit(1);
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -71,22 +83,22 @@ async function run() {
     const commentsCollection = client.db('articles').collection('article_comments');
 
     app.get('/articles', async (req, res) => {
-  const { category, tag } = req.query; // query params থেকে নাও
+      const { category, tag } = req.query; // query params থেকে নাও
 
-  let query = {};
+      let query = {};
 
-  if (category) {
-    query.category = category; // category filter
-  }
+      if (category) {
+        query.category = category; // category filter
+      }
 
-  if (tag) {
-    query.tags = tag; // assume tags array in article document
-  }
+      if (tag) {
+        query.tags = tag; // assume tags array in article document
+      }
 
-  const cursor = articlesCollection.find(query);
-  const result = await cursor.toArray();
-  res.send(result);
-});
+      const cursor = articlesCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
 
     app.get('/articles/:id', async (req, res) => {
