@@ -8,9 +8,10 @@ const port = process.env.PORT || 5000;
 
 // Middlewares
 app.use(cors({
-  origin: ['https://knowsphere-ef061.web.app'],
+  origin: ['http://localhost:5173', 'https://knowsphere-ef061.web.app'],
   credentials: true
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
