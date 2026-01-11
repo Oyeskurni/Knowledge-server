@@ -355,6 +355,39 @@ async function run() {
       }
     });
 
+    app.get('/top-contributors', async (req, res) => {
+  const result = await articlesCollection.aggregate([
+    {
+      $group: {
+        _id: {
+          email: "$user_email",
+          name: "$author_name",
+          photo: "$author_photo"
+        },
+        totalArticles: { $sum: 1 },
+        totalLikes: { $sum: "$likesCount" },
+        totalComments: { $sum: "$commentCount" }
+      }
+    },
+    {
+      $addFields: {
+        score: {
+          $add: [
+            "$totalArticles",
+            { $multiply: ["$totalLikes", 0.5] },
+            { $multiply: ["$totalComments", 0.3] }
+          ]
+        }
+      }
+    },
+    { $sort: { score: -1 } },
+    { $limit: 5 }
+  ]).toArray();
+
+  res.send(result);
+});
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
