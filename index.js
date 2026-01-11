@@ -85,22 +85,33 @@ async function run() {
     const bookmarksCollection = client.db('articles').collection('bookmarks');
 
     // JWT Token
-    app.post('/jwt', (req, res) => {
-      const user = req.body;
+  app.post('/jwt', (req, res) => {
+  try {
+    const user = req.body;
 
-      if (!user?.email) {
-        return res.status(400).send({ message: 'email required' });
-      }
+    if (!user?.email) {
+      return res.status(400).send({ message: 'email required' });
+    }
 
-      const token = jwt.sign(user, process.env.JWT_SECRET, {
-        expiresIn: '1h',
-      });
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET missing");
+      return res.status(500).send({ message: "JWT secret not configured" });
+    }
 
-      res.send({ token });
-    });
+    const token = jwt.sign(
+      { email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
+    res.send({ token });
 
-
+  } catch (error) {
+    console.error("JWT ERROR:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+    // Articles APIs
 
     app.get('/articles', async (req, res) => {
       const { category, tag } = req.query; // query params 
