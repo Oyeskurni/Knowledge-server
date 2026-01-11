@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
+const jwt = require('jsonwebtoken');
 
 // Middlewares
 app.use(cors({
@@ -81,9 +82,28 @@ async function run() {
     await client.connect();
     const articlesCollection = client.db('articles').collection('article');
     const commentsCollection = client.db('articles').collection('article_comments');
+    const bookmarksCollection = client.db('articles').collection('bookmarks');
+
+    // JWT Token
+    app.post('/jwt', (req, res) => {
+      const user = req.body;
+
+      if (!user?.email) {
+        return res.status(400).send({ message: 'email required' });
+      }
+
+      const token = jwt.sign(user, process.env.JWT_SECRET, {
+        expiresIn: '1h',
+      });
+
+      res.send({ token });
+    });
+
+
+
 
     app.get('/articles', async (req, res) => {
-      const { category, tag } = req.query; // query params থেকে নাও
+      const { category, tag } = req.query; // query params 
 
       let query = {};
 
@@ -135,6 +155,10 @@ async function run() {
 
     app.patch('/articles/:id', async (req, res) => {
       const id = req.params.id;
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send({ message: 'Invalid ID' });
+      }
+
       const query = { _id: new ObjectId(id) };
       const article = req.body;
       const updateDoc = { $set: article };
@@ -268,15 +292,29 @@ async function run() {
     });
 
     app.get('/bookmarks/check', async (req, res) => {
-      const { articleId, user_email } = req.query;
+      try {
+        const { articleId, user_email } = req.query;
 
-      const exists = await bookmarksCollection.findOne({
-        articleId: new ObjectId(articleId),
-        user_email
-      });
+        if (!articleId || !user_email) {
+          return res.status(400).send({ error: 'Missing query params' });
+        }
 
-      res.send({ bookmarked: !!exists });
+        if (!ObjectId.isValid(articleId)) {
+          return res.status(400).send({ error: 'Invalid articleId' });
+        }
+
+        const exists = await bookmarksCollection.findOne({
+          articleId: new ObjectId(articleId),
+          user_email
+        });
+
+        res.send({ bookmarked: !!exists });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ error: 'Server error' });
+      }
     });
+
 
     app.delete('/my-bookmarks/:articleId', async (req, res) => {
       try {
